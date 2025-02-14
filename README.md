@@ -2,7 +2,7 @@ Creating a README.md file for your project is a great way to provide essential i
 Here’s a template for a README.md file that you can customize for your project:
 markdownCopy
 
-# WebSocket Trade Streamer
+# CoinBase WebSocket Trade Streamer
 
 ## Overview
 
