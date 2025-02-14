@@ -89,11 +89,12 @@ fun StreamingScreen(viewModel: WebSocketViewModel = koinViewModel()) {
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = if (isError) Color.Red else Color.White,
                 unfocusedIndicatorColor = if (isError) Color.Red else Color.Gray,
-                cursorColor = Color.White,
+                cursorColor = Color.Black,
                 errorCursorColor = Color.Red
             ),
             placeholder = { Text("Type in probability sequence (e.g., 0.1,0.5,0.3)") }
         )
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

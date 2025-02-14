@@ -1,5 +1,6 @@
 package com.example.krutrim.di
 
+import android.util.Log
 import com.example.krutrim.data.local.AppDatabase
 import com.example.krutrim.data.network.WebSocketManager
 import com.example.krutrim.data.network.WebSocketRepository
@@ -8,28 +9,53 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
-    // Provide the AppDatabase
     single {
-        AppDatabase.getDatabase(get())
+        try {
+            Log.d("KoinModule", "Providing AppDatabase")
+            AppDatabase.getDatabase(get())
+        } catch (e: Exception) {
+            Log.e("KoinModule", "Error providing AppDatabase", e)
+            throw e
+        }
     }
 
-    // Provide the TickerMessageDao
     single {
-        get<AppDatabase>().tickerMessageDao()
+        try {
+            Log.d("KoinModule", "Providing TickerMessageDao")
+            get<AppDatabase>().tickerMessageDao()
+        } catch (e: Exception) {
+            Log.e("KoinModule", "Error providing TickerMessageDao", e)
+            throw e
+        }
     }
 
-    // Provide the WebSocketManager with the required TickerMessageDao
     single {
-        WebSocketManager("wss://ws-feed.exchange.coinbase.com", get())
+        try {
+            Log.d("KoinModule", "Providing WebSocketManager")
+            WebSocketManager("wss://ws-feed.exchange.coinbase.com", get())
+        } catch (e: Exception) {
+            Log.e("KoinModule", "Error providing WebSocketManager", e)
+            throw e
+        }
     }
 
-    // Provide the WebSocketRepository with the required WebSocketManager
     single {
-        WebSocketRepository(get())
+        try {
+            Log.d("KoinModule", "Providing WebSocketRepository")
+            WebSocketRepository(get())
+        } catch (e: Exception) {
+            Log.e("KoinModule", "Error providing WebSocketRepository", e)
+            throw e
+        }
     }
 
-    // Provide the WebSocketViewModel with the required WebSocketRepository
     viewModel {
-        WebSocketViewModel(get())
+        try {
+            Log.d("KoinModule", "Providing WebSocketViewModel")
+            WebSocketViewModel(get())
+        } catch (e: Exception) {
+            Log.e("KoinModule", "Error providing WebSocketViewModel", e)
+            throw e
+        }
     }
 }
