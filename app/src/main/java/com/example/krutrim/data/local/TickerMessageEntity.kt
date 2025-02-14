@@ -8,7 +8,7 @@ data class TickerMessageEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val type: String,
     val sequence: Long,
-    val productId: String?, // Make productId nullable
+    val productId: String?,
     val price: String?,
     val open24h: String?,
     val volume24h: String?,

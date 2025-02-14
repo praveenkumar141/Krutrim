@@ -24,12 +24,19 @@ class WebSocketManager(
     val messages: StateFlow<List<TickerMessage>> get() = _messages.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> get() = _error
+    val error: StateFlow<String?> get() = _error.asStateFlow()
+
+    private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected)
+    val connectionStatus: StateFlow<ConnectionStatus> get() = _connectionStatus.asStateFlow()
+
+    private var isConnected = false
 
     fun connect() {
         val request = Request.Builder().url(url).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
+                isConnected = true
+                _connectionStatus.value = ConnectionStatus.Connected
                 val subscribeMessage = """
                     {
                       "type": "subscribe",
@@ -51,7 +58,6 @@ class WebSocketManager(
                 val tickerMessage = parseTickerMessage(text)
                 if (tickerMessage != null) {
                     _messages.value += tickerMessage
-                    // Save the message to the database within a coroutine
                     coroutineScope.launch {
                         tickerMessageDao.insert(
                             TickerMessageEntity(
@@ -81,7 +87,14 @@ class WebSocketManager(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                isConnected = false
+                _connectionStatus.value = ConnectionStatus.Disconnected
                 _error.value = "Error: ${t.localizedMessage} - ${response?.code}"
+            }
+
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                isConnected = false
+                _connectionStatus.value = ConnectionStatus.Disconnected
             }
         })
     }
@@ -89,6 +102,8 @@ class WebSocketManager(
     fun disconnect() {
         webSocket?.close(1000, "Closing WebSocket")
         webSocket = null
+        isConnected = false
+        _connectionStatus.value = ConnectionStatus.Disconnected
     }
 
     private fun parseTickerMessage(jsonString: String): TickerMessage? {
@@ -100,4 +115,13 @@ class WebSocketManager(
             null
         }
     }
+
+    suspend fun loadMessagesFromRoom(): List<TickerMessageEntity> {
+        return tickerMessageDao.getLatestMessages()
+    }
+}
+
+sealed class ConnectionStatus {
+    data object Connected : ConnectionStatus()
+    data object Disconnected : ConnectionStatus()
 }
