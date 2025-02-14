@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
+import com.example.krutrim.domain.models.TickerMessage
 
 @Composable
 fun StreamingScreen(viewModel: WebSocketViewModel = koinViewModel()) {
@@ -44,11 +45,13 @@ fun StreamingScreen(viewModel: WebSocketViewModel = koinViewModel()) {
         Text("CoinBase Trade Stream", fontSize = 22.sp, color = Color.White, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Display the latest 10 messages with the latest on top
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(latestMessages) { msg ->
-                println(msg)
-                Text(msg, Modifier.padding(8.dp), color = Color.White)
+                TickerMessageItem(msg = msg)
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = Color.Gray
+                )
             }
         }
 
@@ -82,7 +85,7 @@ fun StreamingScreen(viewModel: WebSocketViewModel = koinViewModel()) {
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            isError = isError, // Mark error state dynamically
+            isError = isError,
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = if (isError) Color.Red else Color.White,
                 unfocusedIndicatorColor = if (isError) Color.Red else Color.Gray,
@@ -91,5 +94,33 @@ fun StreamingScreen(viewModel: WebSocketViewModel = koinViewModel()) {
             ),
             placeholder = { Text("Type in probability sequence (e.g., 0.1,0.5,0.3)") }
         )
+    }
+}
+
+@Composable
+fun TickerMessageItem(msg: TickerMessage) {
+    Column(
+        modifier = Modifier
+            .padding(8.dp)
+            .background(Color.LightGray)
+            .padding(16.dp)
+    ) {
+        Text("Type: ${msg.type}", color = Color.Black)
+        Text("Sequence: ${msg.sequence}", color = Color.Black)
+        Text("Product ID: ${msg.productId}", color = Color.Black)
+        Text("Price: ${msg.price ?: "N/A"}", color = Color.Black)
+        Text("Open 24h: ${msg.open24h ?: "N/A"}", color = Color.Black)
+        Text("Volume 24h: ${msg.volume24h ?: "N/A"}", color = Color.Black)
+        Text("Low 24h: ${msg.low24h ?: "N/A"}", color = Color.Black)
+        Text("High 24h: ${msg.high24h ?: "N/A"}", color = Color.Black)
+        Text("Volume 30d: ${msg.volume30d ?: "N/A"}", color = Color.Black)
+        Text("Best Bid: ${msg.bestBid ?: "N/A"}", color = Color.Black)
+        Text("Best Bid Size: ${msg.bestBidSize ?: "N/A"}", color = Color.Black)
+        Text("Best Ask: ${msg.bestAsk ?: "N/A"}", color = Color.Black)
+        Text("Best Ask Size: ${msg.bestAskSize ?: "N/A"}", color = Color.Black)
+        Text("Side: ${msg.side}", color = Color.Black)
+        Text("Time: ${msg.time}", color = Color.Black)
+        Text("Trade ID: ${msg.tradeId}", color = Color.Black)
+        Text("Last Size: ${msg.lastSize ?: "N/A"}", color = Color.Black)
     }
 }

@@ -1,6 +1,6 @@
 package com.example.krutrim.domain.models
 
-data class WebSocketResponse(
+data class TickerMessage(
     val type: String,
     val sequence: Long,
     val productId: String,

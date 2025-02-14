@@ -4,11 +4,12 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.*
 import com.example.krutrim.data.network.WebSocketRepository
+import com.example.krutrim.domain.models.TickerMessage
 import kotlin.math.ln
 import kotlin.math.pow
 
 class WebSocketViewModel(private val webSocketManager: WebSocketRepository) : ViewModel() {
-    val messages: StateFlow<List<String>> = webSocketManager.messages
+    val messages: StateFlow<List<TickerMessage>> = webSocketManager.messages
     val error: StateFlow<String?> = webSocketManager.error
 
     private val _perplexity = MutableStateFlow<Double>(0.0)

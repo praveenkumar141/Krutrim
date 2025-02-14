@@ -1,13 +1,27 @@
 package com.example.krutrim.data.network
 
+import com.example.krutrim.data.local.TickerMessageDao
+import com.example.krutrim.data.local.TickerMessageEntity
+import com.example.krutrim.domain.models.TickerMessage
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.flow.*
 import okhttp3.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
-class WebSocketManager(private val url: String) {
+class WebSocketManager(
+    private val url: String,
+    private val tickerMessageDao: TickerMessageDao,
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+) {
     private val client = OkHttpClient()
     private var webSocket: WebSocket? = null
-    private val _messages = MutableStateFlow<List<String>>(emptyList())
-    val messages: StateFlow<List<String>> get() = _messages.asStateFlow()
+    private val _messages = MutableStateFlow<List<TickerMessage>>(emptyList())
+    val messages: StateFlow<List<TickerMessage>> get() = _messages.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> get() = _error
@@ -34,11 +48,40 @@ class WebSocketManager(private val url: String) {
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                _messages.value = _messages.value + text
+                val tickerMessage = parseTickerMessage(text)
+                if (tickerMessage != null) {
+                    _messages.value += tickerMessage
+                    // Save the message to the database within a coroutine
+                    coroutineScope.launch {
+                        tickerMessageDao.insert(
+                            TickerMessageEntity(
+                                type = tickerMessage.type,
+                                sequence = tickerMessage.sequence,
+                                productId = tickerMessage.productId,
+                                price = tickerMessage.price,
+                                open24h = tickerMessage.open24h,
+                                volume24h = tickerMessage.volume24h,
+                                low24h = tickerMessage.low24h,
+                                high24h = tickerMessage.high24h,
+                                volume30d = tickerMessage.volume30d,
+                                bestBid = tickerMessage.bestBid,
+                                bestBidSize = tickerMessage.bestBidSize,
+                                bestAsk = tickerMessage.bestAsk,
+                                bestAskSize = tickerMessage.bestAskSize,
+                                side = tickerMessage.side,
+                                time = tickerMessage.time,
+                                tradeId = tickerMessage.tradeId,
+                                lastSize = tickerMessage.lastSize
+                            )
+                        )
+                    }
+                } else {
+                    println("Received invalid message: $text")
+                }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                _error.value = "Error: ${t.localizedMessage}"
+                _error.value = "Error: ${t.localizedMessage} - ${response?.code}"
             }
         })
     }
@@ -46,5 +89,15 @@ class WebSocketManager(private val url: String) {
     fun disconnect() {
         webSocket?.close(1000, "Closing WebSocket")
         webSocket = null
+    }
+
+    private fun parseTickerMessage(jsonString: String): TickerMessage? {
+        val gson = Gson()
+        return try {
+            gson.fromJson(jsonString, TickerMessage::class.java)
+        } catch (e: JsonSyntaxException) {
+            println("Error parsing JSON: ${e.message}")
+            null
+        }
     }
 }
